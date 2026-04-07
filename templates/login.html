@@ -2,14 +2,17 @@
 <html>
     <head>
         <title>Login/Signup</title>
-        <link rel="stylesheet" href="../static/style2.css">
+        <link rel="stylesheet" href="{{url_for('static',filename='style1.css')}}">
     </head>
     <body>
-        <div class="login-container">
+        <div class="container">
             <h1>Login</h1>
-            <input type="text" placeholder="Email">
-            <input type="password" placeholder="Password">
-            <button>Login</button>
+            <form>
+            <input name="email" type="email" placeholder="Email">
+            <input name="password" type="password" placeholder="Password">
+            <button type="submit">Login</button>
+            </form>
+            <p>Don't have an account?<a href="signup.html">Sign up</a></p>
         </div>
     </body>
 </html>
