@@ -1,25 +1,58 @@
 body{
-    position:fixed;
+    position: fixed;
     top:0;
     left:0;
     width:100%;
-    height:100%;
-    background-image:url('login.png');
-    background-size: cover;
+    height: 100%;
+    background-image: url('image.png');
+    background-size:cover;
     background-repeat: no-repeat;
-    backdrop-filter: blur(9px);
+    margin:0;
+    font-family:'Didact Gothic';
+
     display: flex;
     justify-content: center;
     align-items: center;
-    color: black;
-    font-family: 'Didact Gothic';
+}
+
+.container{
+    background: linear-gradient(135deg,#91AEC4,#91AEC4);
+    padding: 30px;
+    border-radius: 15px;
+    width: 320px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
 }
 h1{
     font-size: 3vw;
     align-items:top;
 }
-.login-container{
-    font-size: 3vw;
-    font-weight: 100;
-    font-family: 'Times New Roman', Times, serif;
+.form-container{
+    backdrop-filter: blur(5px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.form-container input{
+    width: 80%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+.form-container button{
+    width: 80%;
+    padding: 10px;
+    background: #D1CFC9;
+    border: none;
+    color: black;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.form-container button:hover{
+    background: #bcb8b1;
 }

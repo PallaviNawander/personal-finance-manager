@@ -1,14 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
+<head>
     <meta charset="UTF-8">
     <title>Dashboard</title>
-    <link rel="stylesheet" href="../static/style2.css">
-    </head>
-    <body>
-        <div class="dashboard">
-            <h2> Welcome!</h2>
-            
-        </div>
-    </body>
+    <link rel="stylesheet" href="{{url_for('static',filename='style4.css')}}">
+</head>
+
+<body>
+    <section id="home">
+        <h1>Welcome, Pallavi!</h1>
+        <p>Manage your finances smartly</p>
+        <a href="#sections">Scroll Down ↓</a>
+    </section>
+    <section id="sections">
+        <h2>Explore</h2>
+        <ul>
+            <li><a href="#news">Financial News</a></li>
+            <li><a href="#expenses">Expense Tracker</a></li>
+        </ul>
+    </section>
+    <section id="news">
+    <h2>Latest Financial News Updates</h2>
+
+    {% if articles %}
+        {% for article in articles[:6] %}
+            <div style="border:1px solid #ccc; padding:10px; margin:10px; width:300px; display:inline-block; vertical-align:top;">
+                
+                {% if article.urlToImage %}
+                    <img src="{{ article.urlToImage }}" width="100%" height="150">
+                {% endif %}
+
+                <h3>{{ article.title }}</h3>
+                <p>{{ article.description }}</p>
+
+                <a href="{{ article.url }}" target="_blank">Read more</a>
+
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No news available</p>
+    {% endif %}
+</section>
+    <section id="expenses">
+        <h2>Expense Tracker</h2>
+        <form method="POST" action="/add-expense">
+            <input type="number" name="amount" placeholder="Enter amount" required>
+
+            <select name="category" required>
+                <option value="">Select Category</option>
+                <option value="Food">Food</option>
+                <option value="Travel">Travel</option>
+                <option value="Shopping">Shopping</option>
+                <option value="Bills">Bills</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Health">Health</option>
+                <option value="Education">Education</option>
+                <option value="Groceries">Groceries</option>
+                <option value="Other">Other</option>
+            </select>
+
+            <input type="date" name="date" required>
+
+            <button type="submit">Add Expense</button>
+        </form>
+        {% if expenses %}
+        <ul>
+            {% for expense in expenses %}
+            <li>
+                <div id="view-{{ loop.index0 }}">
+                    {{ expense.category }} - ₹{{ expense.amount }} ({{ expense.date }})
+
+                    <button onclick="editExpense(this)" data-index="{{ loop.index0 }}">Edit</button>
+                    <a href="/delete/{{ loop.index0 }}">Delete</a>
+                </div>
+                <div id="edit-{{ loop.index0 }}" style="display:none;">
+                    <form method="POST" action="/update/{{ loop.index0 }}">
+
+                        <input type="number" name="amount" value="{{ expense.amount }}" required>
+
+                        <select name="category">
+                            <option value="Food" {% if expense.category == "Food" %}selected{% endif %}>Food</option>
+                            <option value="Travel" {% if expense.category == "Travel" %}selected{% endif %}>Travel</option>
+                            <option value="Shopping" {% if expense.category == "Shopping" %}selected{% endif %}>Shopping</option>
+                            <option value="Bills" {% if expense.category == "Bills" %}selected{% endif %}>Bills</option>
+                            <option value="Entertainment" {% if expense.category == "Entertainment" %}selected{% endif %}>Entertainment</option>
+                            <option value="Health" {% if expense.category == "Health" %}selected{% endif %}>Health</option>
+                            <option value="Education" {% if expense.category == "Education" %}selected{% endif %}>Education</option>
+                            <option value="Groceries" {% if expense.category == "Groceries" %}selected{% endif %}>Groceries</option>
+                            <option value="Other" {% if expense.category == "Other" %}selected{% endif %}>Other</option>
+                        </select>
+
+                        <input type="date" name="date" value="{{ expense.date }}" required>
+
+                        <button type="submit">Save</button>
+                        <button type="button" onclick="cancelEdit(this)" data-index="{{ loop.index0 }}">Cancel</button>
+                    </form>
+                </div>
+
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+            <p>No expenses added yet</p>
+        {% endif %}
+    </section>
+    <script>
+        function editExpense(btn) {
+            let index = btn.getAttribute("data-index");
+
+            document.getElementById("view-" + index).style.display = "none";
+            document.getElementById("edit-" + index).style.display = "block";
+        }
+
+        function cancelEdit(btn) {
+            let index = btn.getAttribute("data-index");
+
+            document.getElementById("edit-" + index).style.display = "none";
+            document.getElementById("view-" + index).style.display = "block";
+        }
+    </script>
+
+</body>
 </html>
