@@ -1,17 +1,16 @@
-/* Reset */
+
 body {
     margin: 0;
     font-family: Arial, sans-serif;
     background-color: #f5f7fa;
 }
 
-/* Sections */
 section {
     padding: 40px;
     border-bottom: 1px solid #ddd;
 }
 
-/* Welcome */
+
 #home {
     text-align: center;
     background-color: #4CAF50;
@@ -32,7 +31,6 @@ section {
     font-size: 18px;
 }
 
-/* Navigation */
 #sections ul {
     list-style: none;
     padding: 0;
@@ -48,7 +46,7 @@ section {
     font-weight: bold;
 }
 
-/* News Cards */
+
 #news div {
     background: white;
     padding: 15px;
@@ -67,7 +65,6 @@ section {
     border-radius: 8px;
 }
 
-/* Expense Form */
 form {
     margin-bottom: 20px;
 }
@@ -89,7 +86,6 @@ button:hover {
     background-color: #45a049;
 }
 
-/* Expense List */
 ul {
     list-style: none;
     padding: 0;
