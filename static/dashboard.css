@@ -1,0 +1,104 @@
+body {
+    margin: 0;
+    font-family: 'Segoe UI';
+    background: #0f172a;
+    color: white;
+}
+
+.container {
+    padding: 30px;
+}
+
+.title {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+/* FORM */
+.add-box {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.add-box input, 
+.add-box select, 
+.add-box button {
+    padding: 10px;
+    margin: 5px;
+    border-radius: 8px;
+    border: none;
+}
+
+.add-box button {
+    background: #22c55e;
+    cursor: pointer;
+}
+
+/* GRID */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+}
+
+/* CARDS */
+.card {
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(14px);
+    border-radius: 18px;
+    padding: 20px;
+    height: 320px; /* FIXED HEIGHT */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.card canvas {
+    max-height: 220px !important;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+/* LARGE CARDS */
+.large {
+    grid-column: span 2;
+}
+.small {
+    height: 140px !important;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.savings-card h3 {
+    font-size: 16px;
+    opacity: 0.8;
+}
+
+.savings-card p {
+    font-size: 26px;
+    font-weight: bold;
+    margin-top: 5px;
+}
+.grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+    align-items: start;
+}
+
+.transactions-card {
+    height: 320px;
+    overflow-y: auto;
+}
+
+.savings-card {
+    height: 320px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+}

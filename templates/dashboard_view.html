@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Personal Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1 class="title">Personal Dashboard</h1>
+
+    <!-- ADD ENTRY -->
+    <div class="add-box">
+        <form method="POST" action="/add-expense">
+            <input type="number" name="amount" placeholder="Amount" required>
+
+            <select name="type">
+                <option value="expense">Expense</option>
+                <option value="income">Income</option>
+            </select>
+
+            <select name="category">
+                <option>Food</option>
+                <option>Shopping</option>
+                <option>Travel</option>
+                <option>Salary</option>
+                <option>Freelance</option>
+                <option>Groceries</option>
+                <option>Health</option>
+                <option>Entertainment</option>
+                <option>Other</option>
+            </select>
+
+            <input type="date" name="date" required>
+            <button type="submit">Add Entry</button>
+        </form>
+    </div>
+
+    <!-- GRID -->
+    <div class="grid">
+
+        <!-- TRANSACTIONS -->
+        <div class="card transactions-card">
+            <h3>Recent Transactions</h3>
+
+            <div class="transaction-list">
+                {% for t in transactions %}
+                <div class="txn-row">
+                    <div>
+                        <strong>{{ t.category }}</strong><br>
+                        <small>{{ t.date }}</small>
+                    </div>
+
+                    <div class="{{ 'income' if t.type == 'income' else 'expense' }}">
+                        ₹{{ t.amount }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- SAVINGS -->
+        <div class="card savings-card small">
+            <h3>Total Savings</h3>
+            <p>₹{{ savings }}</p>
+        </div>
+
+        <!-- REVENUE FLOW -->
+        <div class="card large">
+            <h3>Revenue Flow</h3>
+            <canvas id="revenueChart"></canvas>
+        </div>
+
+        <!-- EXPENSE -->
+        <div class="card">
+            <h3>Expenses</h3>
+            <p>₹{{ total_expense }}</p>
+            <canvas id="expenseChart"></canvas>
+        </div>
+
+        <!-- INCOME -->
+        <div class="card">
+            <h3>Income</h3>
+            <p>₹{{ total_income }}</p>
+            <canvas id="incomeChart"></canvas>
+        </div>
+
+        <!-- PIE -->
+        <div class="card large">
+            <h3>Income Distribution</h3>
+            <canvas id="pieChart"></canvas>
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+const incomeRaw = JSON.parse('{{ income | tojson | safe }}');
+const expenseRaw = JSON.parse('{{ expense | tojson | safe }}');
+
+let labels = Object.keys(expenseRaw);
+let expenseValues = Object.values(expenseRaw);
+let incomeValues = Object.values(incomeRaw);
+
+if(labels.length === 0){
+    labels = ["No Data"];
+    expenseValues = [0];
+    incomeValues = [0];
+}
+
+// Revenue Flow
+const ctx = document.getElementById("revenueChart").getContext("2d");
+
+const greenGrad = ctx.createLinearGradient(0,0,0,300);
+greenGrad.addColorStop(0,"rgba(34,197,94,0.6)");
+greenGrad.addColorStop(1,"rgba(34,197,94,0)");
+
+const redGrad = ctx.createLinearGradient(0,0,0,300);
+redGrad.addColorStop(0,"rgba(239,68,68,0.6)");
+redGrad.addColorStop(1,"rgba(239,68,68,0)");
+
+new Chart(ctx,{
+    type:"line",
+    data:{
+        labels:labels,
+        datasets:[
+            {
+                label:"Income",
+                data:incomeValues,
+                borderColor:"#22c55e",
+                backgroundColor:greenGrad,
+                fill:true,
+                tension:0.45
+            },
+            {
+                label:"Expense",
+                data:expenseValues,
+                borderColor:"#ef4444",
+                backgroundColor:redGrad,
+                fill:true,
+                tension:0.45
+            }
+        ]
+    },
+    options:{ maintainAspectRatio:false }
+});
+
+// Expense
+new Chart(document.getElementById("expenseChart"),{
+    type:"line",
+    data:{
+        labels:labels,
+        datasets:[{
+            data:expenseValues,
+            borderColor:"#ef4444",
+            tension:0.5
+        }]
+    },
+    options:{ maintainAspectRatio:false }
+});
+
+// Income
+new Chart(document.getElementById("incomeChart"),{
+    type:"line",
+    data:{
+        labels:Object.keys(incomeRaw),
+        datasets:[{
+            data:Object.values(incomeRaw),
+            borderColor:"#22c55e",
+            tension:0.5
+        }]
+    },
+    options:{ maintainAspectRatio:false }
+});
+
+// Pie
+new Chart(document.getElementById("pieChart"),{
+    type:"doughnut",
+    data:{
+        labels:Object.keys(incomeRaw),
+        datasets:[{
+            data:Object.values(incomeRaw),
+            backgroundColor:[
+                "#22c55e","#3b82f6","#f59e0b","#ef4444","#a855f7"
+            ]
+        }]
+    },
+    options:{
+        cutout:"60%",
+        animation:{ animateRotate:true }
+    }
+});
+</script>
+
+</body>
+</html>

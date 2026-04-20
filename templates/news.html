@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>News</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='news.css') }}">
+</head>
+
+<body>
+
+<h1 class="center-title">Financial News</h1>
+
+<div class="news-grid">
+{% for a in articles %}
+<div class="news-card">
+    {% if a.urlToImage %}
+    <img src="{{ a.urlToImage }}">
+    {% endif %}
+    <h3>{{ a.title }}</h3>
+    <p>{{ a.description }}</p>
+</div>
+{% endfor %}
+</div>
+
+</body>
+</html>

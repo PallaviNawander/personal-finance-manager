@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Budget</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='budget.css') }}">
+</head>
+
+<body>
+
+<h1 class="center-title">AI Budget Planner</h1>
+
+<div class="chatbox" id="chatbox"></div>
+
+<input id="msg">
+<button onclick="send()">Send</button>
+
+<script>
+async function send(){
+    let msg = document.getElementById("msg").value;
+
+    let res = await fetch("/chat",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({message:msg})
+    });
+
+    let data = await res.json();
+    document.getElementById("chatbox").innerHTML += data.reply;
+}
+</script>
+
+</body>
+</html>

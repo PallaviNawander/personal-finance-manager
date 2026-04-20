@@ -1,0 +1,50 @@
+body {
+    margin: 0;
+    font-family: 'Segoe UI';
+
+    /* BACKGROUND (important!) */
+    background: linear-gradient(135deg, #0D3B66, #1a5f9e);
+
+    height: 100vh;
+    justify-content: center;
+    align-items: center;
+
+    color: white;
+}
+
+/* GLASS CONTAINER */
+.container {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+
+    background: rgba(255, 255, 255, 0.1);
+
+    padding: 40px;
+    border-radius: 20px;
+
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+
+    text-align: center;
+}
+
+/* INPUT */
+input {
+    display: block;
+    margin: 15px auto;
+
+    padding: 12px;
+    width: 250px;
+
+    border-radius: 10px;
+    border: none;
+}
+
+/* BUTTON */
+button {
+    align-items: center;
+    padding: 12px 25px;
+    background: #FAF0CA;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}

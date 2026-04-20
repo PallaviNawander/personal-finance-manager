@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tax</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='tax.css') }}">
+</head>
+
+<body>
+
+<h1 class="center-title">Tax Calculator</h1>
+
+<input type="number" id="income" placeholder="Enter Income">
+<button onclick="calc()">Calculate</button>
+
+<h3 id="result"></h3>
+
+<script>
+function calc(){
+    let income = document.getElementById("income").value;
+    let tax = income * 0.1;
+    document.getElementById("result").innerText = "Tax: ₹" + tax;
+}
+</script>
+
+</body>
+</html>

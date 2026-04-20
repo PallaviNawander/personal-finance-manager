@@ -1,27 +1,33 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title> Welcome </title>
-        <link rel="stylesheet" href="../static/style3.css">
-        <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
-        <link href="https://fonts.googleapis.com/css2?family=Didact+Gothic&display=swap" rel="stylesheet">
-    <body>
-        <div class="container">
-            <h1>FinTech AI</h1>
-            <p>Your smart money assistant</p>
-            <div class="buttons">
+<head>
+    <title>Welcome</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style3.css') }}">
+
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Didact+Gothic&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <h1>FinTech AI</h1>
+        <p>Your smart money assistant</p>
+
+        <div class="buttons">
             <button onclick="goToLogin()">Login</button>
             <button onclick="goToSignup()">Signup</button>
-            </div>
         </div>
+    </div>
 
-    </body>
     <script>
         function goToLogin(){
             window.location.href='/login';
         }
+
         function goToSignup(){
             window.location.href='/signup';
         }
     </script>
+</body>
 </html>
