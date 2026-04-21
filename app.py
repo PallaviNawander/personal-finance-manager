@@ -1,8 +1,12 @@
-from flask import Flask, render_template, request, redirect, session
+from flask import Flask, render_template, request, redirect, session, jsonify
 import sqlite3
+import requests
 
 app = Flask(__name__)
 app.secret_key = "secret123"
+NEWS_API_KEY = "8fff8f21092b4577b3fda4f72cab4ea7"
+OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
+MODEL_NAME = "mistral"
 
 # ------------------ DB INIT ------------------
 def init_db():
@@ -29,11 +33,21 @@ def init_db():
     )
     """)
 
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS chat_history(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        role TEXT,
+        message TEXT,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
     conn.commit()
     conn.close()
 
-# ------------------ ROUTES ------------------
 
+# ------------------ ROUTES ------------------
 @app.route("/")
 def home():
     return render_template("welcome.html")
@@ -74,12 +88,11 @@ def login():
         if user:
             session["user_id"] = user[0]
             session["name"] = user[1]
-            return redirect("/dashboard")   # 👈 goes to explore page
+            return redirect("/dashboard")
 
     return render_template("login.html")
 
 
-# ------------------ EXPLORE PAGE ------------------
 @app.route("/dashboard")
 def dashboard():
     if "user_id" not in session:
@@ -88,7 +101,7 @@ def dashboard():
     return render_template("dashboard.html")
 
 
-# ------------------ PERSONAL DASHBOARD ------------------
+# ------------------ DASHBOARD VIEW ------------------
 @app.route("/dashboard-view")
 def dashboard_view():
     if "user_id" not in session:
@@ -98,19 +111,26 @@ def dashboard_view():
     cursor = conn.cursor()
 
     cursor.execute(
-        "SELECT amount, category, type FROM expenses WHERE user_id=?",
+        "SELECT amount, category, type, date FROM expenses WHERE user_id=?",
         (session["user_id"],)
     )
+
     rows = cursor.fetchall()
 
+    transactions = []
     income_data = {}
     expense_data = {}
 
     total_income = 0
     total_expense = 0
 
-    for amount, category, t in rows:
-        t = t if t else "expense"
+    for amount, category, t, date in rows:
+        transactions.append({
+            "amount": amount,
+            "category": category,
+            "type": t,
+            "date": date
+        })
 
         if t == "income":
             total_income += amount
@@ -125,6 +145,7 @@ def dashboard_view():
 
     return render_template(
         "dashboard_view.html",
+        transactions=transactions,
         income=income_data,
         expense=expense_data,
         total_income=total_income,
@@ -133,7 +154,7 @@ def dashboard_view():
     )
 
 
-# ------------------ ADD ENTRY ------------------
+# ------------------ ADD EXPENSE ------------------
 @app.route("/add-expense", methods=["POST"])
 def add_expense():
     conn = sqlite3.connect("database.db")
@@ -154,9 +175,97 @@ def add_expense():
     conn.close()
 
     return redirect("/dashboard-view")
+
+
+# ------------------ CHAT ------------------
+@app.route("/chat", methods=["POST"])
+def chat():
+    user_id = session.get("user_id")
+
+    if not user_id:
+        return jsonify({"reply": "Please login first"})
+
+    user_msg = request.json.get("message", "")
+
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "INSERT INTO chat_history (user_id, role, message) VALUES (?, ?, ?)",
+        (user_id, "user", user_msg)
+    )
+
+    cursor.execute(
+        "SELECT role, message FROM chat_history WHERE user_id=? ORDER BY id DESC LIMIT 6",
+        (user_id,)
+    )
+
+    history = cursor.fetchall()[::-1]
+
+    conn.close()
+
+    chat_memory = "\n".join([f"{r}: {m}" for r, m in history])
+
+    prompt = f"""
+You are a finance assistant.
+
+Keep answers short and useful.
+
+Chat history:
+{chat_memory}
+
+User:
+{user_msg}
+"""
+
+    try:
+        res = requests.post(
+            "http://127.0.0.1:11434/api/generate",
+            json={
+                "model": "llama3",
+                "prompt": prompt,
+                "stream": False
+            },
+            timeout=120  # ⬅️ important increase
+        )
+
+        data = res.json()
+        reply = data.get("response", "No response from model")
+
+    except Exception as e:
+        reply = f"Ollama connection failed: {str(e)}"
+
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "INSERT INTO chat_history (user_id, role, message) VALUES (?, ?, ?)",
+        (user_id, "assistant", reply)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({"reply": reply})
+# ------------------ OTHER ROUTES ------------------
 @app.route("/news")
-def news():
-    return render_template("news.html")
+def finance_news():
+    url = "https://newsapi.org/v2/top-headlines"
+
+    params = {
+        "category": "business",
+        "language": "en",
+        "apiKey": NEWS_API_KEY,
+        "pageSize": 10
+    }
+
+    try:
+        res = requests.get(url, params=params, timeout=10)
+        articles = res.json().get("articles", [])
+    except:
+        articles = []
+
+    return render_template("news.html", articles=articles)
 
 @app.route("/budget")
 def budget():
@@ -167,6 +276,7 @@ def tax():
     return render_template("tax.html")
 
 
+# ------------------ RUN ------------------
 if __name__ == "__main__":
     init_db()
     app.run(debug=True)

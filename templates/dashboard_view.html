@@ -3,6 +3,7 @@
 <head>
     <title>Personal Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -87,17 +88,14 @@
             <canvas id="incomeChart"></canvas>
         </div>
 
-        <!-- PIE -->
+        <!-- PIE CHART -->
         <div class="card large">
             <h3>Income Distribution</h3>
             <canvas id="pieChart"></canvas>
         </div>
 
     </div>
-
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
 const incomeRaw = JSON.parse('{{ income | tojson | safe }}');
@@ -113,7 +111,7 @@ if(labels.length === 0){
     incomeValues = [0];
 }
 
-// Revenue Flow
+/* ---------------- REVENUE FLOW ---------------- */
 const ctx = document.getElementById("revenueChart").getContext("2d");
 
 const greenGrad = ctx.createLinearGradient(0,0,0,300);
@@ -147,10 +145,13 @@ new Chart(ctx,{
             }
         ]
     },
-    options:{ maintainAspectRatio:false }
+    options:{
+        responsive:true,
+        maintainAspectRatio:false
+    }
 });
 
-// Expense
+/* ---------------- EXPENSE ---------------- */
 new Chart(document.getElementById("expenseChart"),{
     type:"line",
     data:{
@@ -161,10 +162,10 @@ new Chart(document.getElementById("expenseChart"),{
             tension:0.5
         }]
     },
-    options:{ maintainAspectRatio:false }
+    options:{ responsive:true, maintainAspectRatio:false }
 });
 
-// Income
+/* ---------------- INCOME ---------------- */
 new Chart(document.getElementById("incomeChart"),{
     type:"line",
     data:{
@@ -175,10 +176,10 @@ new Chart(document.getElementById("incomeChart"),{
             tension:0.5
         }]
     },
-    options:{ maintainAspectRatio:false }
+    options:{ responsive:true, maintainAspectRatio:false }
 });
 
-// Pie
+/* ---------------- PIE ---------------- */
 new Chart(document.getElementById("pieChart"),{
     type:"doughnut",
     data:{
@@ -192,7 +193,7 @@ new Chart(document.getElementById("pieChart"),{
     },
     options:{
         cutout:"60%",
-        animation:{ animateRotate:true }
+        responsive:true
     }
 });
 </script>

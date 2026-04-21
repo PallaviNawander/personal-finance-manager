@@ -1,21 +1,16 @@
 html {
     scroll-behavior: smooth;
 }
-
-/* ===== BODY (GLASS BACKGROUND) ===== */
 body {
     margin: 0;
     font-family: 'Segoe UI';
-
-    /* Gradient background */
-    background: linear-gradient(135deg, #D3968C, #a86c64);
-
-    /* Center glow effect */
+    background-image: url('image1.png');
+    background-size: cover;
+    background-position: center;
+    backdrop-filter: blur(8px);
     background-attachment: fixed;
     color: black;
 }
-
-/* ===== WELCOME ===== */
 #welcome {
     font-size: xx-large;
     height: 100vh;
@@ -29,7 +24,6 @@ body {
     text-align: center;
 
     backdrop-filter: blur(15px);
-    background: #105666;
     padding: 40px;
     border-radius: 20px;
 
@@ -80,8 +74,6 @@ body {
 /* ===== GLASS CARDS ===== */
 .feature-card {
     backdrop-filter: blur(20px);
-    background:#105666;
-
     padding: 40px;
     border-radius: 20px;
     text-decoration: none;

@@ -1,31 +1,109 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Budget</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='budget.css') }}">
+<meta charset="UTF-8">
+<title>AI Budget Planner</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='budget.css') }}">
 </head>
 
 <body>
 
-<h1 class="center-title">AI Budget Planner</h1>
+<!-- 🌈 background circles -->
+<div class="circle circle1"></div>
+<div class="circle circle2"></div>
+<div class="circle circle3"></div>
 
-<div class="chatbox" id="chatbox"></div>
+<!-- 🔲 SIDEBAR -->
+<div class="sidebar">
 
-<input id="msg">
-<button onclick="send()">Send</button>
+    <h2>FinanceGPT</h2>
+
+    <div class="sidebar-item"> New Chat</div>
+    <div class="sidebar-item"> Recent Chats</div>
+    <div id="chatHistory" class="history"></div>
+
+    <div class="sidebar-bottom">
+        <div class="sidebar-item"> Profile</div>
+        <div class="sidebar-item"> Theme</div>
+    </div>
+
+</div>
+
+<!-- 🧠 MAIN AREA -->
+<div class="main">
+
+    <!-- TOP GREETING -->
+    <div class="header">
+        <h1>Good Afternoon, {{ session['name'] }}</h1>
+        <p>What do you want to do today?</p>
+    </div>
+
+    <!-- CHAT BOX -->
+    <div class="chatbox" id="chatbox"></div>
+
+    <!-- INPUT -->
+    <div class="input-area">
+        <input id="msg" placeholder="Ask your finance assistant...">
+        <button onclick="send()">➤</button>
+    </div>
+
+</div>
 
 <script>
-async function send(){
-    let msg = document.getElementById("msg").value;
+let chats = [];
 
-    let res = await fetch("/chat",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({message:msg})
+function saveRecent(msg){
+    chats.unshift(msg);
+    if(chats.length > 5) chats.pop();
+
+    let history = document.getElementById("chatHistory");
+    history.innerHTML = "";
+
+    chats.forEach(c=>{
+        history.innerHTML += `<div class="history-item">${c}</div>`;
     });
+}
 
-    let data = await res.json();
-    document.getElementById("chatbox").innerHTML += data.reply;
+async function send(){
+    let input = document.getElementById("msg");
+    let msg = input.value;
+    if(!msg.trim()) return;
+
+    let chatbox = document.getElementById("chatbox");
+
+    // user msg
+    chatbox.innerHTML += `<div class="user-msg">${msg}</div>`;
+    saveRecent(msg);
+
+    input.value = "";
+
+    // loading
+    let loading = document.createElement("div");
+    loading.className = "bot-msg";
+    loading.innerText = "Thinking...";
+    chatbox.appendChild(loading);
+
+    chatbox.scrollTop = chatbox.scrollHeight;
+
+    try {
+        let res = await fetch("/chat", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({message: msg})
+        });
+
+        let data = await res.json();
+
+        loading.remove();
+
+        chatbox.innerHTML += `<div class="bot-msg">${data.reply}</div>`;
+
+    } catch(err){
+        loading.remove();
+        chatbox.innerHTML += `<div class="bot-msg">⚠️ AI Error</div>`;
+    }
+
+    chatbox.scrollTop = chatbox.scrollHeight;
 }
 </script>
 
