@@ -1,7 +1,7 @@
 body {
     margin: 0;
     font-family: 'Segoe UI';
-    background: #0f172a;
+    background: #765269;
     color: white;
 }
 
@@ -18,7 +18,7 @@ body {
 }
 
 .news-card {
-    background: rgba(255,255,255,0.08);
+    background: #765269;
     backdrop-filter: blur(10px);
     padding: 15px;
     border-radius: 12px;

@@ -1,12 +1,15 @@
 from flask import Flask, render_template, request, redirect, session, jsonify
 import sqlite3
 import requests
+import os
 
 app = Flask(__name__)
 app.secret_key = "secret123"
+
 NEWS_API_KEY = "8fff8f21092b4577b3fda4f72cab4ea7"
+
 OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
-MODEL_NAME = "mistral"
+MODEL_NAME = "llama3"
 
 # ------------------ DB INIT ------------------
 def init_db():
@@ -53,6 +56,7 @@ def home():
     return render_template("welcome.html")
 
 
+# ------------------ AUTH ------------------
 @app.route("/signup", methods=["GET","POST"])
 def signup():
     if request.method == "POST":
@@ -93,15 +97,14 @@ def login():
     return render_template("login.html")
 
 
+# ------------------ DASHBOARD ------------------
 @app.route("/dashboard")
 def dashboard():
     if "user_id" not in session:
         return redirect("/login")
-
     return render_template("dashboard.html")
 
 
-# ------------------ DASHBOARD VIEW ------------------
 @app.route("/dashboard-view")
 def dashboard_view():
     if "user_id" not in session:
@@ -140,7 +143,6 @@ def dashboard_view():
             expense_data[category] = expense_data.get(category, 0) + amount
 
     savings = total_income - total_expense
-
     conn.close()
 
     return render_template(
@@ -177,7 +179,7 @@ def add_expense():
     return redirect("/dashboard-view")
 
 
-# ------------------ CHAT ------------------
+# ------------------ AI CHAT ------------------
 @app.route("/chat", methods=["POST"])
 def chat():
     user_id = session.get("user_id")
@@ -201,15 +203,14 @@ def chat():
     )
 
     history = cursor.fetchall()[::-1]
-
     conn.close()
 
     chat_memory = "\n".join([f"{r}: {m}" for r, m in history])
 
     prompt = f"""
-You are a finance assistant.
+You are a smart finance assistant.
 
-Keep answers short and useful.
+Keep answers short, practical, and helpful.
 
 Chat history:
 {chat_memory}
@@ -220,20 +221,20 @@ User:
 
     try:
         res = requests.post(
-            "http://127.0.0.1:11434/api/generate",
+            OLLAMA_URL,
             json={
-                "model": "llama3",
+                "model": MODEL_NAME,
                 "prompt": prompt,
                 "stream": False
             },
-            timeout=120  # ⬅️ important increase
+            timeout=120
         )
 
         data = res.json()
-        reply = data.get("response", "No response from model")
+        reply = data.get("response", "No response")
 
     except Exception as e:
-        reply = f"Ollama connection failed: {str(e)}"
+        reply = f"Ollama error: {str(e)}"
 
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
@@ -247,14 +248,13 @@ User:
     conn.close()
 
     return jsonify({"reply": reply})
-# ------------------ OTHER ROUTES ------------------
+
+
+# ------------------ NEWS ------------------
 @app.route("/news")
 def finance_news():
-    import requests
-
     query = request.args.get("q")
 
-    # If user searches → show search results
     if query:
         url = "https://newsapi.org/v2/everything"
         params = {
@@ -264,8 +264,6 @@ def finance_news():
             "apiKey": NEWS_API_KEY,
             "pageSize": 10
         }
-
-    # Otherwise → show random finance/business news
     else:
         url = "https://newsapi.org/v2/top-headlines"
         params = {
@@ -286,9 +284,15 @@ def finance_news():
         articles=articles,
         query=query
     )
+
+
+# ------------------ OTHER ------------------
 @app.route("/budget")
 def budget():
+    if "user_id" not in session:
+        return redirect("/login")
     return render_template("budget.html")
+
 
 @app.route("/tax")
 def tax():

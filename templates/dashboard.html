@@ -2,44 +2,50 @@
 <html>
 <head>
     <title>FinTech AI</title>
+
     <link rel="stylesheet" href="{{ url_for('static', filename='style4.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Didact+Gothic&family=Libre+Baskerville&display=swap" rel="stylesheet">
 </head>
 
 <body>
 
-<section id="welcome">
-    <div class="center-box">
-        <h1>Welcome</h1>
-        <p>Manage your finances efficiently and smartly</p>
+<!-- 🌈 GRADIENT BACKGROUND -->
+<div class="circle circle1"></div>
+<div class="circle circle2"></div>
 
-            <a href="#explore" class="down-arrow">↓</a>
-    </div>
+<!-- ================= NAVBAR ================= -->
+<div class="nav-bar">
+    <a href="/dashboard-view">Dashboard</a>
+    <a href="/news">News</a>
+    <a href="/budget">AI Planner</a>
+    <a href="/tax">Tax</a>
+</div>
+
+<!-- ================= WELCOME ================= -->
+<section id="welcome">
+
+    <h1>Welcome, {{ session['name'] }}</h1>
+    <p class="tagline">Take control of your money. Build your future intelligently.</p>
+
+    <a href="#about" class="down-arrow">↓</a>
+
 </section>
 
-<section id="explore">
+<!-- ================= ABOUT ================= -->
+<section id="about">
 
-    <div class="feature-grid">
+    <h2>About FinTech AI</h2>
 
-        <a href="/dashboard-view" class="feature-card">
-    <h2>Personal Dashboard</h2>
-    <p>Track income, expenses & savings visually</p>
-</a>
+    <p class="about-text">
+        FinTech AI is your all-in-one intelligent financial companion.
+        Track expenses, plan budgets, analyze trends, and get AI-powered insights —
+        all in one place.
+    </p>
 
-<a href="/news" class="feature-card">
-    <h2>Financial News</h2>
-    <p>Stay updated with latest market trends</p>
-</a>
-
-<a href="/budget" class="feature-card">
-    <h2>AI Budget Planner</h2>
-    <p>Get smart AI-based financial advice</p>
-</a>
-
-<a href="/tax" class="feature-card">
-    <h2>Tax Calculator</h2>
-    <p>Estimate your taxes easily</p>
-</a>
-    </div>
+    <p class="about-text">
+        Whether you're managing daily spending or planning long-term goals,
+        this platform helps you stay in control with clarity and confidence.
+    </p>
 
 </section>
 

@@ -1,69 +1,201 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>AI Budget Planner</title>
+
 <link rel="stylesheet" href="{{ url_for('static', filename='budget.css') }}">
+<link href="https://fonts.googleapis.com/css2?family=Didact+Gothic&family=Libre+Baskerville&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
 
-<!-- 🌈 background circles -->
+<!-- BACKGROUND -->
 <div class="circle circle1"></div>
 <div class="circle circle2"></div>
 <div class="circle circle3"></div>
 
-<!-- 🔲 SIDEBAR -->
-<div class="sidebar">
+<!-- AI HELP BUTTON -->
+<button class="chatbot-button" onclick="goToChat()">AI Help</button>
 
-    <h2>FinanceGPT</h2>
+<!-- ===================== PAGE 1 ===================== -->
+<section class="budget-page">
 
-    <div class="sidebar-item"> New Chat</div>
-    <div class="sidebar-item"> Recent Chats</div>
-    <div id="chatHistory" class="history"></div>
+<h1 class="heading">Budget Planner</h1>
 
-    <div class="sidebar-bottom">
-        <div class="sidebar-item"> Profile</div>
-        <div class="sidebar-item"> Theme</div>
+<!-- DATE SECTION -->
+<div class="top-card">
+
+    <div class="date-group">
+        <label>Start Date</label>
+        <input type="date">
+    </div>
+
+    <div class="date-group">
+        <label>End Date</label>
+        <input type="date">
+    </div>
+
+    <div class="date-group">
+        <label>Currency</label>
+        <input type="text" value="₹ Rupees" readonly>
     </div>
 
 </div>
 
-<!-- 🧠 MAIN AREA -->
-<div class="main">
+<div class="budget-grid">
 
-    <!-- TOP GREETING -->
-    <div class="header">
-        <h1>Good Afternoon, {{ session['name'] }}</h1>
-        <p>What do you want to do today?</p>
-    </div>
+<!-- EXPENSE -->
+<div class="table-card">
+<h3>Expense Categories</h3>
 
-    <!-- CHAT BOX -->
-    <div class="chatbox" id="chatbox"></div>
+<div class="table-row header">
+<span>Category</span><span>Budget</span><span>Actual</span>
+</div>
 
-    <!-- INPUT -->
-    <div class="input-area">
-        <input id="msg" placeholder="Ask your finance assistant...">
-        <button onclick="send()">➤</button>
-    </div>
+<div class="table-row"><span>Food</span><input><input></div>
+<div class="table-row"><span>Groceries</span><input><input></div>
+<div class="table-row"><span>Shopping</span><input><input></div>
+<div class="table-row"><span>Entertainment</span><input><input></div>
+<div class="table-row"><span>Travel</span><input><input></div>
+<div class="table-row"><span>Health</span><input><input></div>
+<div class="table-row"><span>Education</span><input><input></div>
+<div class="table-row"><span>Utilities</span><input><input></div>
+<div class="table-row"><span>Transport</span><input><input></div>
+<div class="table-row"><span>Personal Care</span><input><input></div>
+<div class="table-row"><span>Others</span><input><input></div>
+</div>
+
+<!-- BILL TRACKER -->
+<div class="table-card">
+<h3>Bill Tracker</h3>
+
+<div class="table-row header">
+<span>Bill</span><span>Budget</span><span>Actual</span>
+</div>
+
+<div class="table-row"><span>Rent</span><input><input></div>
+<div class="table-row"><span>Electricity</span><input><input></div>
+<div class="table-row"><span>Internet</span><input><input></div>
+<div class="table-row"><span>Water</span><input><input></div>
+<div class="table-row"><span>Phone</span><input><input></div>
+<div class="table-row"><span>Insurance</span><input><input></div>
+<div class="table-row"><span>Subscriptions</span><input><input></div>
+</div>
+
+<!-- INCOME -->
+<div class="table-card">
+<h3>Income Summary</h3>
+
+<div class="table-row header">
+<span>Source</span><span>Budget</span><span>Actual</span>
+</div>
+
+<div class="table-row"><span>Salary</span><input><input></div>
+<div class="table-row"><span>Freelance</span><input><input></div>
+<div class="table-row"><span>Investments</span><input><input></div>
+<div class="table-row"><span>Business</span><input><input></div>
+<div class="table-row"><span>Gifts</span><input><input></div>
+<div class="table-row"><span>Other</span><input><input></div>
+</div>
+
+<!-- NOTES -->
+<div class="table-card">
+<h3>Notes</h3>
+<textarea placeholder="Write notes..." style="width:100%; height:120px;"></textarea>
+</div>
+
+<!-- LOANS -->
+<div class="table-card">
+<h3>Loans</h3>
+
+<div class="table-row header">
+<span>Type</span><span>Amount</span><span>Paid</span>
+</div>
+
+<div class="table-row"><span>Education Loan</span><input><input></div>
+<div class="table-row"><span>Personal Loan</span><input><input></div>
+<div class="table-row"><span>Credit Card</span><input><input></div>
+<div class="table-row"><span>Home Loan</span><input><input></div>
+<div class="table-row"><span>Others</span><input><input></div>
+</div>
+
+<!-- SAVINGS GOALS -->
+<div class="table-card">
+<h3>Savings Goals</h3>
+
+<div class="table-row header">
+<span>Goal</span><span>Target</span><span>Current</span>
+</div>
+
+<div id="goals"></div>
+
+<button onclick="addGoal()">+ Add Goal</button>
+
+<canvas id="goalChart"></canvas>
+</div>
+
+<!-- AI INSIGHTS -->
+<div class="table-card">
+<h3>AI Insights</h3>
+<p>Your insights will appear here based on your budget...</p>
+</div>
 
 </div>
+</section>
+
+<!-- ===================== PAGE 2 ===================== -->
+<section id="chat-page" class="chat-page">
+
+<div class="chat-wrapper">
+
+<div class="sidebar" id="sidebar">
+<button class="toggle-btn" id="toggleBtn" onclick="toggleSidebar()">☰</button>
+
+<h3>FinanceGPT</h3>
+
+<div onclick="newChat()">+ New Chat</div>
+<div id="history"></div>
+
+</div>
+
+<div class="chat-main">
+
+<div id="chatbox"></div>
+
+<div class="input-area">
+<input id="msg" placeholder="Ask your finance assistant...">
+<button onclick="send()">➤</button>
+</div>
+
+</div>
+
+</div>
+</section>
 
 <script>
-let chats = [];
 
-function saveRecent(msg){
-    chats.unshift(msg);
-    if(chats.length > 5) chats.pop();
-
-    let history = document.getElementById("chatHistory");
-    history.innerHTML = "";
-
-    chats.forEach(c=>{
-        history.innerHTML += `<div class="history-item">${c}</div>`;
+/* SCROLL FUNCTION (FIXED) */
+function goToChat(){
+    const chat = document.getElementById("chat-page");
+    window.scrollTo({
+        top: chat.offsetTop,
+        behavior: "smooth"
     });
 }
 
+/* ADD GOAL */
+function addGoal(){
+    document.getElementById("goals").innerHTML += `
+    <div class="table-row">
+        <input placeholder="Goal">
+        <input>
+        <input>
+    </div>`;
+}
+
+/* CHAT FUNCTION */
 async function send(){
     let input = document.getElementById("msg");
     let msg = input.value;
@@ -71,40 +203,33 @@ async function send(){
 
     let chatbox = document.getElementById("chatbox");
 
-    // user msg
     chatbox.innerHTML += `<div class="user-msg">${msg}</div>`;
-    saveRecent(msg);
-
     input.value = "";
 
-    // loading
-    let loading = document.createElement("div");
-    loading.className = "bot-msg";
-    loading.innerText = "Thinking...";
-    chatbox.appendChild(loading);
+    let res = await fetch("/chat",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({message: msg})
+    });
 
-    chatbox.scrollTop = chatbox.scrollHeight;
-
-    try {
-        let res = await fetch("/chat", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({message: msg})
-        });
-
-        let data = await res.json();
-
-        loading.remove();
-
-        chatbox.innerHTML += `<div class="bot-msg">${data.reply}</div>`;
-
-    } catch(err){
-        loading.remove();
-        chatbox.innerHTML += `<div class="bot-msg">⚠️ AI Error</div>`;
-    }
+    let data = await res.json();
+    chatbox.innerHTML += `<div class="bot-msg">${data.reply}</div>`;
 
     chatbox.scrollTop = chatbox.scrollHeight;
 }
+function toggleSidebar(){
+    const sidebar = document.getElementById("sidebar");
+    const btn = document.getElementById("toggleBtn");
+
+    sidebar.classList.toggle("closed");
+
+    if(sidebar.classList.contains("closed")){
+        btn.innerHTML = "☰";
+    } else {
+        btn.innerHTML = "✕";
+    }
+}
+
 </script>
 
 </body>

@@ -2,9 +2,10 @@
 <html>
 <head>
     <title>Personal Dashboard</title>
+
     <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
 
-    <!-- Better font -->
+    <!-- GOOGLE FONTS -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -14,96 +15,113 @@
 
 <div class="container">
 
-    <h1 class="title">💸 Personal Dashboard</h1>
+    <h1 class="title">
+        Welcome, <span class="username">{{ session["name"] }}</span>
+    </h1>
 
-    <!-- ADD ENTRY -->
-    <div class="add-box">
-        <form method="POST" action="/add-expense">
+    <!-- TOP CARDS -->
+    <div class="top-cards">
+        <div class="card summary-card">
+            <h4>Total Balance</h4>
+            <p>₹{{ savings }}</p>
+        </div>
 
-            <input type="number" name="amount" placeholder="Amount (₹)" required>
+        <div class="card summary-card">
+            <h4>Income</h4>
+            <p>₹{{ total_income }}</p>
+        </div>
 
-            <select name="type">
-                <option value="expense">Expense</option>
-                <option value="income">Income</option>
-            </select>
+        <div class="card summary-card">
+            <h4>Expense</h4>
+            <p>₹{{ total_expense }}</p>
+        </div>
 
-            <select name="category">
-                <option>Food</option>
-                <option>Shopping</option>
-                <option>Travel</option>
-                <option>Salary</option>
-                <option>Freelance</option>
-                <option>Groceries</option>
-                <option>Health</option>
-                <option>Entertainment</option>
-                <option>Other</option>
-            </select>
-
-            <input type="date" name="date" required>
-
-            <button type="submit">Add Entry</button>
-        </form>
+        <div class="card summary-card">
+            <h4>Total Savings</h4>
+            <p>₹{{ savings }}</p>
+        </div>
     </div>
 
-    <!-- GRID -->
-    <div class="grid">
+    <!-- MAIN LAYOUT -->
+    <div class="main-layout">
 
-        <!-- TRANSACTIONS -->
-        <div class="card transactions-card">
-            <h3>Recent Transactions</h3>
+        <!-- LEFT PANEL -->
+        <div class="left-panel">
 
-            <div class="transaction-list">
-                {% for t in transactions %}
-                <div class="txn-row">
-                    <div class="txn-left">
-                        <strong>{{ t.category }}</strong>
-                        <small>{{ t.date }}</small>
-                    </div>
-
-                    <div class="txn-right {{ 'income' if t.type == 'income' else 'expense' }}">
-                        ₹{{ t.amount }}
-                    </div>
-                </div>
-                {% endfor %}
+            <div class="card month-summary">
+                <h3>This Month Summary</h3>
+                <p>Income: ₹{{ total_income }}</p>
+                <p>Expense: ₹{{ total_expense }}</p>
+                <p>Balance: ₹{{ savings }}</p>
             </div>
+
+            <!-- TRANSACTIONS -->
+            <div class="card transactions-card">
+                <h3>Recent Transactions</h3>
+
+                <div class="txn-controls">
+                    <input type="text" id="searchInput" placeholder="Search category...">
+
+                    <select id="filterType">
+                        <option value="all">All</option>
+                        <option value="income">Income</option>
+                        <option value="expense">Expense</option>
+                    </select>
+                </div>
+
+                <div class="transaction-table">
+
+                    <div class="txn-header">
+                        <span>Category</span>
+                        <span>Date</span>
+                        <span>Amount</span>
+                    </div>
+
+                    {% for t in transactions %}
+                    <div class="txn-row" data-type="{{ t.type }}">
+                        <span class="category">{{ t.category }}</span>
+                        <span>{{ t.date }}</span>
+                        <span class="{{ 'income' if t.type == 'income' else 'expense' }}">
+                            ₹{{ t.amount }}
+                        </span>
+                    </div>
+                    {% endfor %}
+
+                </div>
+            </div>
+
         </div>
 
-        <!-- SAVINGS -->
-        <div class="card savings-card small">
-            <h3>Total Savings</h3>
-            <p class="amount">₹{{ savings }}</p>
-        </div>
+        <!-- RIGHT PANEL -->
+        <div class="right-panel">
 
-        <!-- REVENUE FLOW -->
-        <div class="card large">
-            <h3>Revenue Flow</h3>
-            <canvas id="revenueChart"></canvas>
-        </div>
+            <div class="card large revenue-card">
+                <h3>Revenue Flow</h3>
+                <div class="chart-container">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
 
-        <!-- EXPENSE -->
-        <div class="card">
-            <h3>Expenses</h3>
-            <p class="amount expense">₹{{ total_expense }}</p>
-            <canvas id="expenseChart"></canvas>
-        </div>
+            <div class="row-2">
 
-        <!-- INCOME -->
-        <div class="card">
-            <h3>Income</h3>
-            <p class="amount income">₹{{ total_income }}</p>
-            <canvas id="incomeChart"></canvas>
-        </div>
+                <div class="card">
+                    <h3>Expenses</h3>
+                    <canvas id="expenseChart"></canvas>
+                </div>
 
-        <!-- PIE -->
-        <div class="card large">
-            <h3>Income Distribution</h3>
-            <canvas id="pieChart"></canvas>
+                <div class="card">
+                    <h3>Income</h3>
+                    <canvas id="incomeChart"></canvas>
+                </div>
+
+            </div>
+
         </div>
 
     </div>
+
 </div>
 
-<!-- SCRIPT SAME AS YOURS (UNCHANGED) -->
 <script>
 const incomeRaw = JSON.parse('{{ income | tojson | safe }}');
 const expenseRaw = JSON.parse('{{ expense | tojson | safe }}');
@@ -118,85 +136,90 @@ if(labels.length === 0){
     incomeValues = [0];
 }
 
-/* Revenue Flow */
-const ctx = document.getElementById("revenueChart").getContext("2d");
+const incomeColor = "#7A9E7E";
+const expenseColor = "#C06060";
 
-const greenGrad = ctx.createLinearGradient(0,0,0,300);
-greenGrad.addColorStop(0,"rgba(34,197,94,0.6)");
-greenGrad.addColorStop(1,"rgba(34,197,94,0)");
-
-const redGrad = ctx.createLinearGradient(0,0,0,300);
-redGrad.addColorStop(0,"rgba(239,68,68,0.6)");
-redGrad.addColorStop(1,"rgba(239,68,68,0)");
-
-new Chart(ctx,{
-    type:"line",
-    data:{
-        labels:labels,
-        datasets:[
+/* REVENUE FLOW */
+new Chart(document.getElementById("revenueChart"), {
+    data: {
+        labels: labels,
+        datasets: [
             {
-                label:"Income",
-                data:incomeValues,
-                borderColor:"#22c55e",
-                backgroundColor:greenGrad,
-                fill:true,
-                tension:0.45
+                type: 'bar',
+                label: 'Expense',
+                data: expenseValues,
+                backgroundColor: expenseColor,
+                borderRadius: 6
             },
             {
-                label:"Expense",
-                data:expenseValues,
-                borderColor:"#ef4444",
-                backgroundColor:redGrad,
-                fill:true,
-                tension:0.45
+                type: 'line',
+                label: 'Income',
+                data: incomeValues,
+                borderColor: incomeColor,
+                borderWidth: 3,
+                tension: 0.3,
+                fill: false,
+                pointRadius: 4
             }
         ]
     },
-    options:{ responsive:true, maintainAspectRatio:false }
+    options: {
+        responsive: true,
+        maintainAspectRatio: false
+    }
 });
 
-/* Expense */
-new Chart(document.getElementById("expenseChart"),{
-    type:"line",
-    data:{
-        labels:labels,
-        datasets:[{
-            data:expenseValues,
-            borderColor:"#ef4444",
-            tension:0.5
+/* EXPENSE */
+new Chart(document.getElementById("expenseChart"), {
+    type: 'bar',
+    data: {
+        labels: labels,
+        datasets: [{
+            data: expenseValues,
+            backgroundColor: expenseColor,
+            borderRadius: 6
         }]
     },
-    options:{ responsive:true, maintainAspectRatio:false }
+    options: { responsive: true }
 });
 
-/* Income */
-new Chart(document.getElementById("incomeChart"),{
-    type:"line",
-    data:{
-        labels:Object.keys(incomeRaw),
-        datasets:[{
-            data:Object.values(incomeRaw),
-            borderColor:"#22c55e",
-            tension:0.5
+/* INCOME */
+new Chart(document.getElementById("incomeChart"), {
+    type: 'bar',
+    data: {
+        labels: Object.keys(incomeRaw),
+        datasets: [{
+            data: Object.values(incomeRaw),
+            backgroundColor: incomeColor,
+            borderRadius: 6
         }]
     },
-    options:{ responsive:true, maintainAspectRatio:false }
+    options: { responsive: true }
 });
 
-/* Pie */
-new Chart(document.getElementById("pieChart"),{
-    type:"doughnut",
-    data:{
-        labels:Object.keys(incomeRaw),
-        datasets:[{
-            data:Object.values(incomeRaw),
-            backgroundColor:[
-                "#22c55e","#3b82f6","#f59e0b","#ef4444","#a855f7"
-            ]
-        }]
-    },
-    options:{ cutout:"60%", responsive:true }
-});
+/* FILTER */
+const searchInput = document.getElementById("searchInput");
+const filterType = document.getElementById("filterType");
+const rows = document.querySelectorAll(".txn-row");
+
+function filterTransactions() {
+    const search = searchInput.value.toLowerCase();
+    const type = filterType.value;
+
+    rows.forEach(row => {
+        const category = row.querySelector(".category").innerText.toLowerCase();
+        const rowType = row.getAttribute("data-type");
+
+        const matchSearch = category.includes(search);
+        const matchType = (type === "all" || type === rowType);
+
+        row.style.display = (matchSearch && matchType) ? "grid" : "none";
+    });
+}
+
+searchInput.addEventListener("input", filterTransactions);
+filterType.addEventListener("change", filterTransactions);
+
 </script>
 
 </body>

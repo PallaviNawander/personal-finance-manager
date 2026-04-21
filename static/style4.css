@@ -1,133 +1,146 @@
 html {
     scroll-behavior: smooth;
 }
+
 body {
     margin: 0;
-    font-family: 'Segoe UI';
-    background-image: url('image1.png');
-    background-size: cover;
-    background-position: center;
-    backdrop-filter: blur(8px);
-    background-attachment: fixed;
-    color: black;
+    font-family: 'Didact Gothic', sans-serif;
+    background: #915F6D;
+    color: white;
+    overflow-x: hidden;
 }
-#welcome {
-    font-size: xx-large;
-    height: 100vh;
+
+/* 🌈 GRADIENT CIRCLES */
+.circle {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.5;
+    z-index: -1;
+}
+
+.circle1 {
+    background: #E6E9F9;
+    width: 350px;
+    height: 350px;
+    top: 50px;
+    left: 50px;
+}
+
+.circle2 {
+    background: #E6E9F9;
+    width: 400px;
+    height: 400px;
+    bottom: 80px;
+    right: 80px;
+}
+
+/* ================= NAVBAR ================= */
+.nav-bar {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    width: 70%; /* 🔥 longer navbar */
+
     display: flex;
-    justify-content: center;
+    justify-content: space-around;
     align-items: center;
+
+    padding: 14px 30px;
+
+    backdrop-filter: blur(20px);
+    background: rgba(255,255,255,0.1);
+
+    border-radius: 40px;
+    border: 1px solid rgba(255,255,255,0.2);
+
+    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+
+    z-index: 10;
 }
 
-/* GLASS BOX */
-.center-box {
-    text-align: center;
-
-    backdrop-filter: blur(15px);
-    padding: 40px;
-    border-radius: 20px;
-
-    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
-
-    animation: fadeIn 1s ease-in-out;
-}
-
-.center-box h1 {
-    font-size: 55px;
-}
-
-.explore-btn {
-    display: inline-block;
-    margin-top: 20px;
-    color: black;
+.nav-bar a {
     text-decoration: none;
-    font-size: 18px;
-
+    color: white;
+    font-size: 16px;
     transition: 0.3s;
 }
 
-.explore-btn:hover {
-    transform: translateY(5px);
+.nav-bar a:hover {
+    opacity: 0.7;
+    transform: scale(1.05);
 }
 
-/* ===== EXPLORE ===== */
-#explore {
-    padding: 80px 40px;
-}
-
-.center-title {
-    text-align: center;
-    margin-bottom: 50px;
-
-    animation: fadeIn 1.2s ease-in-out;
-}
-
-/* ===== GRID ===== */
-.feature-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr); 
-    gap: 30px;
-    max-width: 900px;
-    margin: auto;
-}
-
-/* ===== GLASS CARDS ===== */
-.feature-card {
-    backdrop-filter: blur(20px);
-    padding: 40px;
-    border-radius: 20px;
-    text-decoration: none;
-    color: black;
-    text-align: center;
-    height: 180px;
+/* ================= WELCOME ================= */
+#welcome {
+    height: 100vh;
 
     display: flex;
     flex-direction: column;
     justify-content: center;
+    align-items: center;
 
-    /* SHADOW */
-    box-shadow: 
-        0 8px 32px rgba(0,0,0,0.25),
-        inset 0 0 10px rgba(255,255,255,0.2);
+    text-align: center;
 
-    /* BORDER GLASS EFFECT */
-    border: 1px solid rgba(255,255,255,0.3);
-
-    /* ANIMATION */
-    transition: all 0.4s ease;
-
-    animation: slideUp 0.8s ease forwards;
-    opacity: 0;
+    animation: fadeIn 1.2s ease-in-out;
 }
 
-.feature-card:nth-child(1){ animation-delay: 0.2s; }
-.feature-card:nth-child(2){ animation-delay: 0.4s; }
-.feature-card:nth-child(3){ animation-delay: 0.6s; }
-.feature-card:nth-child(4){ animation-delay: 0.8s; }
-.feature-card:hover {
-    transform: translateY(-10px) scale(1.05);
-
-    background: rgba(255,255,255,0.25);
-
-    box-shadow: 
-        0 12px 40px rgba(0,0,0,0.35),
-        inset 0 0 12px rgba(255,255,255,0.3);
-}
-
-/* TEXT */
-.feature-card h2 {
+#welcome h1 {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 60px;
     margin-bottom: 10px;
 }
 
-.feature-card p {
-    color: #1e293b;
+.tagline {
+    font-size: 20px;
+    opacity: 0.85;
 }
 
-/* ===== ANIMATIONS ===== */
+/* DOWN ARROW */
+.down-arrow {
+    margin-top: 25px;
+    font-size: 30px;
+    text-decoration: none;
+    color: white;
+    animation: bounce 1.5s infinite;
+}
+
+/* ================= ABOUT ================= */
+#about {
+    height: 100vh;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    text-align: center;
+    padding: 0 20px;
+
+    animation: slideUp 1s ease;
+}
+
+#about h2 {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 40px;
+    margin-bottom: 20px;
+}
+
+.about-text {
+    max-width: 700px;
+    line-height: 1.7;
+    font-size: 18px;
+    opacity: 0.9;
+    margin-bottom: 15px;
+}
+
+/* ================= ANIMATIONS ================= */
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(25px);
     }
     to {
         opacity: 1;
@@ -137,7 +150,7 @@ body {
 
 @keyframes slideUp {
     from {
-        transform: translateY(50px);
+        transform: translateY(60px);
         opacity: 0;
     }
     to {
@@ -145,16 +158,8 @@ body {
         opacity: 1;
     }
 }
-.down-arrow {
-    display: inline-block;
-    margin-top: 20px;
-    font-size: 28px;
-    text-decoration: none;
-    color: black;
-    animation: bounce 1.5s infinite;
-}
 
 @keyframes bounce {
-    0%, 100% { transform: translateY(0); }
+    0%,100% { transform: translateY(0); }
     50% { transform: translateY(8px); }
 }
