@@ -250,14 +250,30 @@ User:
 # ------------------ OTHER ROUTES ------------------
 @app.route("/news")
 def finance_news():
-    url = "https://newsapi.org/v2/top-headlines"
+    import requests
 
-    params = {
-        "category": "business",
-        "language": "en",
-        "apiKey": NEWS_API_KEY,
-        "pageSize": 10
-    }
+    query = request.args.get("q")
+
+    # If user searches → show search results
+    if query:
+        url = "https://newsapi.org/v2/everything"
+        params = {
+            "q": query,
+            "language": "en",
+            "sortBy": "publishedAt",
+            "apiKey": NEWS_API_KEY,
+            "pageSize": 10
+        }
+
+    # Otherwise → show random finance/business news
+    else:
+        url = "https://newsapi.org/v2/top-headlines"
+        params = {
+            "category": "business",
+            "language": "en",
+            "apiKey": NEWS_API_KEY,
+            "pageSize": 10
+        }
 
     try:
         res = requests.get(url, params=params, timeout=10)
@@ -265,8 +281,11 @@ def finance_news():
     except:
         articles = []
 
-    return render_template("news.html", articles=articles)
-
+    return render_template(
+        "news.html",
+        articles=articles,
+        query=query
+    )
 @app.route("/budget")
 def budget():
     return render_template("budget.html")

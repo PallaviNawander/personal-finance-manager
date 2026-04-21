@@ -3,6 +3,14 @@ body {
     font-family: 'Segoe UI';
     background: #0f172a;
     color: white;
+
+    /* STEP 1: page fade-in */
+    animation: pageFade 0.8s ease-in-out;
+}
+
+@keyframes pageFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .container {
@@ -20,8 +28,8 @@ body {
     margin-bottom: 30px;
 }
 
-.add-box input, 
-.add-box select, 
+.add-box input,
+.add-box select,
 .add-box button {
     padding: 10px;
     margin: 5px;
@@ -32,6 +40,12 @@ body {
 .add-box button {
     background: #22c55e;
     cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.add-box button:hover {
+    transform: scale(1.05);
+    background: #16a34a;
 }
 
 /* GRID */
@@ -39,6 +53,7 @@ body {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 25px;
+    align-items: start;
 }
 
 /* CARDS */
@@ -47,24 +62,30 @@ body {
     backdrop-filter: blur(14px);
     border-radius: 18px;
     padding: 20px;
-    height: 320px; /* FIXED HEIGHT */
+    height: 320px;
+
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+
+    /* STEP 2: smooth hover transition */
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.4);
 }
 
 .card canvas {
     max-height: 220px !important;
 }
 
-.card:hover {
-    transform: translateY(-5px);
-}
-
 /* LARGE CARDS */
 .large {
     grid-column: span 2;
 }
+
 .small {
     height: 140px !important;
     justify-content: center;
@@ -82,18 +103,40 @@ body {
     font-weight: bold;
     margin-top: 5px;
 }
-.grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 25px;
-    align-items: start;
-}
 
+/* TRANSACTIONS */
 .transactions-card {
     height: 320px;
     overflow-y: auto;
 }
 
+.txn-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    animation: fadeUp 0.4s ease;
+}
+
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.income {
+    color: #22c55e;
+}
+
+.expense {
+    color: #ef4444;
+}
+
+/* SAVINGS CARD */
 .savings-card {
     height: 320px;
     display: flex;

@@ -3,6 +3,10 @@
 <head>
     <title>Personal Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+
+    <!-- Better font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
@@ -10,12 +14,13 @@
 
 <div class="container">
 
-    <h1 class="title">Personal Dashboard</h1>
+    <h1 class="title">💸 Personal Dashboard</h1>
 
     <!-- ADD ENTRY -->
     <div class="add-box">
         <form method="POST" action="/add-expense">
-            <input type="number" name="amount" placeholder="Amount" required>
+
+            <input type="number" name="amount" placeholder="Amount (₹)" required>
 
             <select name="type">
                 <option value="expense">Expense</option>
@@ -35,6 +40,7 @@
             </select>
 
             <input type="date" name="date" required>
+
             <button type="submit">Add Entry</button>
         </form>
     </div>
@@ -49,12 +55,12 @@
             <div class="transaction-list">
                 {% for t in transactions %}
                 <div class="txn-row">
-                    <div>
-                        <strong>{{ t.category }}</strong><br>
+                    <div class="txn-left">
+                        <strong>{{ t.category }}</strong>
                         <small>{{ t.date }}</small>
                     </div>
 
-                    <div class="{{ 'income' if t.type == 'income' else 'expense' }}">
+                    <div class="txn-right {{ 'income' if t.type == 'income' else 'expense' }}">
                         ₹{{ t.amount }}
                     </div>
                 </div>
@@ -65,7 +71,7 @@
         <!-- SAVINGS -->
         <div class="card savings-card small">
             <h3>Total Savings</h3>
-            <p>₹{{ savings }}</p>
+            <p class="amount">₹{{ savings }}</p>
         </div>
 
         <!-- REVENUE FLOW -->
@@ -77,18 +83,18 @@
         <!-- EXPENSE -->
         <div class="card">
             <h3>Expenses</h3>
-            <p>₹{{ total_expense }}</p>
+            <p class="amount expense">₹{{ total_expense }}</p>
             <canvas id="expenseChart"></canvas>
         </div>
 
         <!-- INCOME -->
         <div class="card">
             <h3>Income</h3>
-            <p>₹{{ total_income }}</p>
+            <p class="amount income">₹{{ total_income }}</p>
             <canvas id="incomeChart"></canvas>
         </div>
 
-        <!-- PIE CHART -->
+        <!-- PIE -->
         <div class="card large">
             <h3>Income Distribution</h3>
             <canvas id="pieChart"></canvas>
@@ -97,6 +103,7 @@
     </div>
 </div>
 
+<!-- SCRIPT SAME AS YOURS (UNCHANGED) -->
 <script>
 const incomeRaw = JSON.parse('{{ income | tojson | safe }}');
 const expenseRaw = JSON.parse('{{ expense | tojson | safe }}');
@@ -111,7 +118,7 @@ if(labels.length === 0){
     incomeValues = [0];
 }
 
-/* ---------------- REVENUE FLOW ---------------- */
+/* Revenue Flow */
 const ctx = document.getElementById("revenueChart").getContext("2d");
 
 const greenGrad = ctx.createLinearGradient(0,0,0,300);
@@ -145,13 +152,10 @@ new Chart(ctx,{
             }
         ]
     },
-    options:{
-        responsive:true,
-        maintainAspectRatio:false
-    }
+    options:{ responsive:true, maintainAspectRatio:false }
 });
 
-/* ---------------- EXPENSE ---------------- */
+/* Expense */
 new Chart(document.getElementById("expenseChart"),{
     type:"line",
     data:{
@@ -165,7 +169,7 @@ new Chart(document.getElementById("expenseChart"),{
     options:{ responsive:true, maintainAspectRatio:false }
 });
 
-/* ---------------- INCOME ---------------- */
+/* Income */
 new Chart(document.getElementById("incomeChart"),{
     type:"line",
     data:{
@@ -179,7 +183,7 @@ new Chart(document.getElementById("incomeChart"),{
     options:{ responsive:true, maintainAspectRatio:false }
 });
 
-/* ---------------- PIE ---------------- */
+/* Pie */
 new Chart(document.getElementById("pieChart"),{
     type:"doughnut",
     data:{
@@ -191,10 +195,7 @@ new Chart(document.getElementById("pieChart"),{
             ]
         }]
     },
-    options:{
-        cutout:"60%",
-        responsive:true
-    }
+    options:{ cutout:"60%", responsive:true }
 });
 </script>
 

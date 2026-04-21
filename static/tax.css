@@ -1,50 +1,71 @@
 body {
     margin: 0;
     font-family: 'Segoe UI';
-
-    /* BACKGROUND (important!) */
-    background: linear-gradient(135deg, #0D3B66, #1a5f9e);
-
-    height: 100vh;
-    justify-content: center;
-    align-items: center;
-
+    background: #0f172a;
     color: white;
 }
 
-/* GLASS CONTAINER */
-.container {
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+/* FULL SPLIT LAYOUT */
+.tax-wrapper {
+    display: flex;
+    height: 100vh;
+    width: 100%;
+}
 
-    background: rgba(255, 255, 255, 0.1);
-
+/* BOTH PANELS HALF WIDTH */
+.card {
+    flex: 1;
     padding: 40px;
-    border-radius: 20px;
+    box-sizing: border-box;
 
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 15px;
+}
 
+/* LEFT SIDE (CALCULATOR) */
+.calculator {
+    background: rgba(255,255,255,0.05);
+    border-right: 1px solid rgba(255,255,255,0.1);
+    align-items: center;
     text-align: center;
+}
+
+/* RIGHT SIDE (INFO) */
+.info {
+    background: rgba(255,255,255,0.08);
 }
 
 /* INPUT */
 input {
-    display: block;
-    margin: 15px auto;
-
     padding: 12px;
-    width: 250px;
-
+    width: 60%;
     border-radius: 10px;
     border: none;
+    outline: none;
+    font-size: 16px;
 }
 
 /* BUTTON */
 button {
-    align-items: center;
-    padding: 12px 25px;
-    background: #FAF0CA;
-    border: none;
+    padding: 12px 20px;
     border-radius: 10px;
+    border: none;
+    background: #22c55e;
+    color: white;
     cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    transform: scale(1.05);
+    background: #16a34a;
+}
+
+/* INFO BOXES */
+.box {
+    background: rgba(255,255,255,0.05);
+    padding: 12px;
+    border-radius: 10px;
 }

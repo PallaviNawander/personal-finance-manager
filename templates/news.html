@@ -9,16 +9,31 @@
 
 <h1 class="center-title">Financial News</h1>
 
+<!-- 🔍 SEARCH BAR -->
+<div class="search-box">
+    <form method="GET" action="/news">
+        <input type="text" name="q" placeholder="Search news (crypto, stocks, AI...)" value="{{ query or '' }}">
+        <button type="submit">Search</button>
+    </form>
+</div>
+
 <div class="news-grid">
+
 {% for a in articles %}
 <div class="news-card">
+
     {% if a.urlToImage %}
     <img src="{{ a.urlToImage }}">
     {% endif %}
+
     <h3>{{ a.title }}</h3>
     <p>{{ a.description }}</p>
+
+    <a href="{{ a.url }}" target="_blank">Read more</a>
+
 </div>
 {% endfor %}
+
 </div>
 
 </body>

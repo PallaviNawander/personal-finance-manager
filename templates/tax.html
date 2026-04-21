@@ -1,24 +1,61 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Tax</title>
+    <title>Tax Calculator</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='tax.css') }}">
 </head>
 
 <body>
 
-<h1 class="center-title">Tax Calculator</h1>
+<div class="tax-wrapper">
 
-<input type="number" id="income" placeholder="Enter Income">
-<button onclick="calc()">Calculate</button>
+    <!-- LEFT: CALCULATOR -->
+    <div class="card calculator">
 
-<h3 id="result"></h3>
+        <h1>Tax Calculator</h1>
+
+        <input type="number" id="income" placeholder="Enter Income">
+
+        <button onclick="calc()">Calculate</button>
+
+        <h2 id="result"></h2>
+
+    </div>
+
+    <!-- RIGHT: INFO PANEL -->
+    <div class="card info">
+
+        <h2>📊 Tax Information</h2>
+
+        <div class="box">
+            <h3>Income Tax</h3>
+            <p>0% - 30% based on income slabs</p>
+        </div>
+
+        <div class="box">
+            <h3>GST</h3>
+            <p>0%, 5%, 12%, 18%, 28%</p>
+        </div>
+
+        <div class="box">
+            <h3>TDS</h3>
+            <p>Deducted at source on salary & payments</p>
+        </div>
+
+        <div class="box">
+            <h3>Capital Gains</h3>
+            <p>Tax on stocks, crypto & property profits</p>
+        </div>
+
+    </div>
+
+</div>
 
 <script>
 function calc(){
     let income = document.getElementById("income").value;
     let tax = income * 0.1;
-    document.getElementById("result").innerText = "Tax: ₹" + tax;
+    document.getElementById("result").innerText = "Estimated Tax: ₹" + tax;
 }
 </script>
 
