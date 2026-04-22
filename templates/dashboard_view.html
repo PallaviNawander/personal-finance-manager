@@ -123,18 +123,23 @@
 </div>
 
 <script>
-const incomeRaw = JSON.parse('{{ income | tojson | safe }}');
-const expenseRaw = JSON.parse('{{ expense | tojson | safe }}');
+const incomeRaw = JSON.parse('{{ income | tojson | safe }}') || {};
+const expenseRaw = JSON.parse('{{ expense | tojson | safe }}') || {};
 
-let labels = Object.keys(expenseRaw);
-let expenseValues = Object.values(expenseRaw);
-let incomeValues = Object.values(incomeRaw);
+/* 🔥 FIX: combine all labels so charts align properly */
+let allLabels = Array.from(new Set([
+    ...Object.keys(expenseRaw),
+    ...Object.keys(incomeRaw)
+]));
 
-if(labels.length === 0){
-    labels = ["No Data"];
-    expenseValues = [0];
-    incomeValues = [0];
+/* fallback */
+if(allLabels.length === 0){
+    allLabels = ["No Data"];
 }
+
+/* map values safely */
+let expenseValues = allLabels.map(l => expenseRaw[l] || 0);
+let incomeValues = allLabels.map(l => incomeRaw[l] || 0);
 
 const incomeColor = "#7A9E7E";
 const expenseColor = "#C06060";
@@ -142,7 +147,7 @@ const expenseColor = "#C06060";
 /* REVENUE FLOW */
 new Chart(document.getElementById("revenueChart"), {
     data: {
-        labels: labels,
+        labels: allLabels,
         datasets: [
             {
                 type: 'bar',
@@ -173,7 +178,7 @@ new Chart(document.getElementById("revenueChart"), {
 new Chart(document.getElementById("expenseChart"), {
     type: 'bar',
     data: {
-        labels: labels,
+        labels: allLabels,
         datasets: [{
             data: expenseValues,
             backgroundColor: expenseColor,
@@ -187,9 +192,9 @@ new Chart(document.getElementById("expenseChart"), {
 new Chart(document.getElementById("incomeChart"), {
     type: 'bar',
     data: {
-        labels: Object.keys(incomeRaw),
+        labels: allLabels,
         datasets: [{
-            data: Object.values(incomeRaw),
+            data: incomeValues,
             backgroundColor: incomeColor,
             borderRadius: 6
         }]

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Profile</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='profile.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Didact+Gothic&family=Libre+Baskerville&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+<div class="profile-container">
+
+    <h1 class="title">Your Profile</h1>
+
+    <div class="profile-card">
+
+        <div class="avatar-section">
+            <img src="https://i.imgur.com/1X4Z1Zt.png" class="avatar">
+        </div>
+
+        <div class="details">
+            <p><b>Name:</b> {{ session['name'] }}</p>
+            <p><b>Email:</b> user@example.com</p>
+            <p><b>Plan:</b> Free User</p>
+        </div>
+
+    </div>
+
+    <div class="profile-card">
+
+        <div class="avatar-section">
+            <img src="https://i.imgur.com/8Km9tLL.png" class="avatar">
+        </div>
+
+        <div class="details">
+            <p><b>Financial Level:</b> Beginner</p>
+            <p><b>Goal:</b> Save & Invest</p>
+            <p><b>Status:</b> Active</p>
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

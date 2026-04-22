@@ -1,0 +1,107 @@
+body {
+    margin: 0;
+    font-family: 'Didact Gothic', 'Libre Baskerville', sans-serif;
+    background: linear-gradient(135deg, #6D4558, #3b2430);
+    color: white;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* ================= FULL BACKGROUND GLOW CIRCLES ================= */
+body::before,
+body::after {
+    content: "";
+    position: fixed;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    filter: blur(120px);
+    z-index: 0;
+    opacity: 0.6;
+}
+
+/* top-left glow */
+body::before {
+    background: #EBCBCB;
+    top: -150px;
+    left: -150px;
+}
+
+/* bottom-right glow */
+body::after {
+    background: #caa0b0;
+    bottom: -150px;
+    right: -150px;
+}
+
+/* ================= MAIN CONTAINER ================= */
+.profile-container {
+    padding: 60px 20px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+}
+
+/* ================= TITLE ================= */
+.title {
+    font-size: 42px;
+    margin-bottom: 40px;
+    font-family: 'Libre Baskerville', serif;
+    letter-spacing: 1px;
+}
+
+/* ================= GLASS PROFILE CARD ================= */
+.profile-card {
+    background: rgba(235, 203, 203, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+
+    width: 60%;
+    margin: 25px auto;
+    padding: 25px;
+    border-radius: 20px;
+
+    display: flex;
+    align-items: center;
+    gap: 20px;
+
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.profile-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.35);
+}
+
+/* ================= AVATAR ================= */
+.avatar-section {
+    flex: 0 0 100px;
+}
+
+.avatar {
+    width: 95px;
+    height: 95px;
+    border-radius: 50%;
+    border: 3px solid #EBCBCB;
+    background: white;
+}
+
+/* ================= TEXT DETAILS ================= */
+.details {
+    text-align: left;
+    font-size: 18px;
+    color: #fff;
+}
+
+.details p {
+    margin: 6px 0;
+}
+
+/* ================= ENSURE ABOVE BACKGROUND ================= */
+.profile-container {
+    position: relative;
+    z-index: 1;
+}
