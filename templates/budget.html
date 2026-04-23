@@ -16,6 +16,7 @@
 <div class="circle circle3"></div>
 
 <button class="chatbot-button" onclick="goToChat()">AI Help</button>
+<button onclick="autoFill()">🤖 Auto Plan</button>
 
 <button onclick="manualSave()" style="position:fixed;top:70px;right:20px;padding:10px 15px;border:none;border-radius:12px;background:#6D4558;color:white;cursor:pointer;z-index:999;">
 Save Budget
@@ -161,7 +162,10 @@ Save Budget
 </section>
 
 <script>
+    
+let currentChatId = null;
 
+/* ================= NAV ================= */
 function goToChat(){
     document.getElementById("chat-page").scrollIntoView({behavior:"smooth"});
 }
@@ -170,11 +174,11 @@ function toggleSidebar(){
     document.getElementById("sidebar").classList.toggle("closed");
 }
 
-/* DATA */
+/* ================= BUDGET ================= */
 function getBudgetData(){
     let rows = [];
 
-    document.querySelectorAll(".table-row").forEach((row, index) => {
+    document.querySelectorAll(".table-row").forEach((row) => {
         let span = row.querySelector("span");
         let inputs = row.querySelectorAll("input");
 
@@ -190,7 +194,6 @@ function getBudgetData(){
     return rows;
 }
 
-/* SAVE (FIXED) */
 async function saveBudget(){
     await fetch("/save-budget", {
         method:"POST",
@@ -208,74 +211,172 @@ function manualSave(){
     alert("Saved!");
 }
 
-/* AI */
+/* ================= AI INSIGHTS ================= */
 async function getAIInsights(){
-    let res = await fetch("/ai-insights", {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({rows:getBudgetData()})
-    });
+    try {
+        let res = await fetch("/ai-insights", {
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body: JSON.stringify({rows:getBudgetData()})
+        });
 
-    let data = await res.json();
+        let data = await res.json();
 
-    document.getElementById("aiText").innerHTML =
-        data.insights.map(i => `<p>${i}</p>`).join("");
+        document.getElementById("aiText").innerHTML =
+            data.insights.map(i => `<p>${i}</p>`).join("");
+
+    } catch(err){
+        document.getElementById("aiText").innerHTML =
+            "<p>⚠️ AI error</p>";
+        console.log(err);
+    }
 }
 
-/* CHAT */
-async function loadChat(){
-    let res = await fetch("/load-chat");
-    let data = await res.json();
+/* ================= CHAT SYSTEM ================= */
 
-    let box = document.getElementById("chatbox");
-    box.innerHTML = "";
+/* CREATE NEW CHAT */
+async function newChat(){
+    try {
+        let res = await fetch("/new-chat", {method:"POST"});
+        let data = await res.json();
 
-    data.history.forEach(m => {
-        box.innerHTML += `
-            <div class="${m.role}-msg">
-                ${m.message}
-            </div>
-        `;
-    });
+        currentChatId = data.chat_id;
 
-    box.scrollTop = box.scrollHeight;
+        document.getElementById("chatbox").innerHTML = "";
+        await loadChats();
+    } catch(err){
+        console.log("newChat error:", err);
+    }
 }
 
+/* LOAD CHAT LIST (SIDEBAR) */
+async function loadChats(){
+    try {
+        let res = await fetch("/get-chats");
+        let data = await res.json();
+
+        let div = document.getElementById("history");
+        div.innerHTML = "";
+
+        if(!data.chats || data.chats.length === 0){
+            div.innerHTML = "<p>No chats yet</p>";
+            return;
+        }
+
+        data.chats.forEach(c => {
+            div.innerHTML += `
+                <div onclick="loadChat(${c.id})"
+                     style="cursor:pointer;margin:8px 0;">
+                    💬 ${c.title}
+                </div>
+            `;
+        });
+
+    } catch(err){
+        console.log("loadChats error:", err);
+    }
+}
+
+/* LOAD SINGLE CHAT */
+async function loadChat(id){
+    if(!id) return;
+
+    currentChatId = id;
+
+    try {
+        let res = await fetch(`/load-chat/${id}`);
+        let data = await res.json();
+
+        let box = document.getElementById("chatbox");
+        box.innerHTML = "";
+
+        data.history.forEach(m => {
+            box.innerHTML += `
+                <div class="${m.role}-msg">
+                    ${m.message}
+                </div>
+            `;
+        });
+
+        box.scrollTop = box.scrollHeight;
+
+    } catch(err){
+        console.log("loadChat error:", err);
+    }
+}
+
+/* SEND MESSAGE */
 async function send(){
     let input = document.getElementById("msg");
     let msg = input.value;
+
     if(!msg.trim()) return;
+
+    /* ensure chat exists */
+    if(!currentChatId){
+        await newChat();
+    }
 
     let box = document.getElementById("chatbox");
 
-    // user message instantly
     box.innerHTML += `<div class="user-msg">${msg}</div>`;
     input.value = "";
 
-    let res = await fetch("/chat", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({message: msg})
-    });
+    box.innerHTML += `<div class="bot-msg">⏳ Thinking...</div>`;
 
-    let data = await res.json();
+    try {
+        let res = await fetch("/chat", {
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body: JSON.stringify({
+                message: msg,
+                chat_id: currentChatId
+            })
+        });
 
-    box.innerHTML += `<div class="bot-msg">${data.reply}</div>`;
-    box.scrollTop = box.scrollHeight;
+        let data = await res.json();
+
+        /* replace last message */
+        let msgs = document.querySelectorAll(".bot-msg");
+        msgs[msgs.length - 1].innerHTML = data.reply;
+
+        box.scrollTop = box.scrollHeight;
+
+    } catch(err){
+        let msgs = document.querySelectorAll(".bot-msg");
+        msgs[msgs.length - 1].innerHTML = "❌ Connection error";
+        console.log(err);
+    }
 }
 
-window.onload = () => {
-    loadChat();
-};
+/* ================= AUTO PLAN ================= */
+async function autoFill(){
+    try {
+        let res = await fetch("/ai-fill-budget", {method:"POST"});
+        let data = await res.json();
 
-/* LOAD */
-const savedData = JSON.parse('{{ saved_data | default({}) | tojson | safe }}');
-const startDate = "{{ start_date | default('') }}";
-const endDate = "{{ end_date | default('') }}";
+        document.querySelectorAll(".table-row").forEach(row => {
+            let span = row.querySelector("span");
+            let inputs = row.querySelectorAll("input");
 
-window.onload = () => {
+            if(span && inputs.length >= 2){
+                let cat = span.innerText.trim();
+                if(data[cat] !== undefined){
+                    inputs[0].value = data[cat];
+                }
+            }
+        });
+    } catch(err){
+        console.log(err);
+    }
+}
 
-    // existing budget loading
+/* ================= RESTORE ================= */
+function restoreBudget(){
+    const savedData = JSON.parse('{{ saved_data | default({}) | tojson | safe }}');
+    const startDate = "{{ start_date | default('') }}";
+    const endDate = "{{ end_date | default('') }}";
+
     if(startDate) document.getElementById("startDate").value = startDate;
     if(endDate) document.getElementById("endDate").value = endDate;
 
@@ -292,36 +393,27 @@ window.onload = () => {
                 let cat = span.innerText.trim();
 
                 if(savedData[cat]){
-                    inputs[0].value = savedData[cat].budget ?? "";
-                    inputs[1].value = savedData[cat].actual ?? "";
+                    inputs[0].value = savedData[cat].budget || "";
+                    inputs[1].value = savedData[cat].actual || "";
                 }
             }
         });
     });
-
-    // ✅ ADD THIS
-    loadChat();
-};
-async function loadChat(){
-    let res = await fetch("/load-chat");
-    let data = await res.json();
-
-    let box = document.getElementById("chatbox");
-    box.innerHTML = "";
-
-    data.history.forEach(m => {
-        box.innerHTML += `
-            <div class="${m.role}-msg">
-                ${m.message}
-            </div>
-        `;
-    });
-
-    box.scrollTop = box.scrollHeight;
 }
-    
 
+/* ================= INIT ================= */
+window.onload = async () => {
+    await loadChats();
+
+    if(!currentChatId){
+        await newChat();
+    }
+
+    await loadChat(currentChatId);
+    restoreBudget();
+};
 </script>
+
 
 </body>
 </html>

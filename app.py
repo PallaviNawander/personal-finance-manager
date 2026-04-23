@@ -1,14 +1,14 @@
 from flask import Flask, render_template, request, redirect, session, jsonify
 import sqlite3
 import requests
+import time
 
 app = Flask(__name__)
 app.secret_key = "secret123"
 
 NEWS_API_KEY = "8fff8f21092b4577b3fda4f72cab4ea7"
-
 OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
-MODEL_NAME = "tinyllama"
+MODEL_NAME = "phi3"
 
 
 # ================= DB =================
@@ -57,13 +57,31 @@ def init_db():
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     )
     """)
-    
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS chats(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        title TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS chat_messages(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        chat_id INTEGER,
+        role TEXT,
+        message TEXT,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
 
     conn.commit()
     conn.close()
 
 
-# ================= HOME =================
+# ================= BUDGET AI =================
 def generate_budget_ai(rows):
     insights = []
 
@@ -94,15 +112,12 @@ def generate_budget_ai(rows):
 
     for cat, data in category_map.items():
         if data["actual"] > data["budget"] and data["budget"] > 0:
-            diff = data["actual"] - data["budget"]
-            insights.append(f"⚠️ {cat} exceeded budget by ₹{int(diff)}")
-
-    if total_income > 0:
-        food = category_map.get("Food", {}).get("actual", 0)
-        if food > 0.3 * total_income:
-            insights.append("🍔 Food spending is high (>30% of income). Try reducing it.")
+            insights.append(f"⚠️ {cat} exceeded budget")
 
     return insights
+
+
+# ================= HOME =================
 @app.route("/")
 def home():
     return render_template("welcome.html")
@@ -146,7 +161,6 @@ def login():
             session["user_id"] = user[0]
             session["name"] = user[1]
             session["email"] = user[2]
-
             return redirect("/dashboard")
 
     return render_template("login.html")
@@ -158,11 +172,7 @@ def profile():
     if "user_id" not in session:
         return redirect("/login")
 
-    return render_template(
-        "profile.html",
-        name=session.get("name"),
-        email=session.get("email")
-    )
+    return render_template("profile.html", name=session["name"], email=session["email"])
 
 
 # ================= DASHBOARD =================
@@ -182,7 +192,6 @@ def dashboard_view():
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
 
-    # 🔹 Budget-based data for charts
     cursor.execute("""
         SELECT category, SUM(budget), SUM(actual)
         FROM budget_data
@@ -192,15 +201,18 @@ def dashboard_view():
 
     rows = cursor.fetchall()
 
+    saved_data = {}
     income = {}
     expense = {}
+
+    income_categories = ["Salary","Freelance","Investments","Business","Gifts","Other"]
 
     total_income = 0
     total_expense = 0
 
-    income_categories = ["Salary","Freelance","Investments","Business","Gifts","Other"]
-
     for cat, b, a in rows:
+        saved_data[cat] = {"budget": b or 0, "actual": a or 0}
+
         if cat in income_categories:
             income[cat] = a or 0
             total_income += a or 0
@@ -210,7 +222,6 @@ def dashboard_view():
 
     savings = total_income - total_expense
 
-    # 🔹 Transactions (for table display)
     cursor.execute("""
         SELECT category, type, amount, date
         FROM expenses
@@ -218,27 +229,24 @@ def dashboard_view():
         ORDER BY id DESC
     """, (session["user_id"],))
 
-    txn_rows = cursor.fetchall()
-
-    transactions = []
-    for cat, t, amt, date in txn_rows:
-        transactions.append({
-            "category": cat,
-            "type": t,
-            "amount": amt,
-            "date": date
-        })
+    transactions = [
+        {"category": c, "type": t, "amount": a, "date": d}
+        for c, t, a, d in cursor.fetchall()
+    ]
 
     conn.close()
 
     return render_template(
         "dashboard_view.html",
-        income=income or {},
-        expense=expense or {},
-        transactions=transactions or [],
-        total_income=total_income or 0,
-        total_expense=total_expense or 0,
-        savings=savings or 0
+        income=income,
+        expense=expense,
+        transactions=transactions,
+        total_income=total_income,
+        total_expense=total_expense,
+        savings=savings,
+        saved_data=saved_data,
+        start_date="",
+        end_date=""
     )
 
 
@@ -246,14 +254,13 @@ def dashboard_view():
 @app.route("/save-budget", methods=["POST"])
 def save_budget():
     if "user_id" not in session:
-        return jsonify({"status": "error"})
+        return jsonify({"status": "error", "msg": "unauthorized"})
 
     data = request.json
 
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
 
-    # delete old entries for same date range
     cursor.execute("""
         DELETE FROM budget_data 
         WHERE user_id=? AND start_date=? AND end_date=?
@@ -261,22 +268,24 @@ def save_budget():
 
     for row in data["rows"]:
         cursor.execute("""
-            INSERT INTO budget_data (user_id, start_date, end_date, category, budget, actual)
+            INSERT INTO budget_data 
+            (user_id, start_date, end_date, category, budget, actual)
             VALUES (?, ?, ?, ?, ?, ?)
         """, (
             session["user_id"],
             data["start_date"],
             data["end_date"],
             row["category"],
-            float(row["budget"]) if row["budget"] not in [None, ""] else None,
-            float(row["actual"]) if row["actual"] not in [None, ""] else None
+            float(row["budget"]) if row["budget"] not in ["", None] else 0,
+            float(row["actual"]) if row["actual"] not in ["", None] else 0
         ))
 
     conn.commit()
     conn.close()
 
     return jsonify({"status": "saved"})
-# ================= LOAD BUDGET =================
+
+
 # ================= LOAD BUDGET =================
 @app.route("/budget")
 def budget():
@@ -292,34 +301,24 @@ def budget():
         WHERE user_id=?
     """, (session["user_id"],))
 
-    data = cursor.fetchall()
+    rows = cursor.fetchall()
     conn.close()
 
-    budget_map = {}
+    saved_data = {}
     start_date = ""
     end_date = ""
 
-    for s, e, cat, b, a in data:
-
-        if cat not in budget_map:
-            budget_map[cat] = {
-                "budget": b if b is not None else "",
-                "actual": a if a is not None else ""
-            }
-        else:
-            # update safely
-            if b is not None:
-                budget_map[cat]["budget"] = b
-            if a is not None:
-                budget_map[cat]["actual"] = a
-
-        # keep latest dates
+    for s, e, cat, b, a in rows:
+        saved_data[cat] = {
+            "budget": b or 0,
+            "actual": a or 0
+        }
         start_date = s
         end_date = e
 
     return render_template(
         "budget.html",
-        saved_data=budget_map,
+        saved_data=saved_data,
         start_date=start_date,
         end_date=end_date
     )
@@ -333,8 +332,7 @@ def news():
 
     try:
         url = f"https://newsapi.org/v2/top-headlines?category=business&country=in&apiKey={NEWS_API_KEY}"
-        response = requests.get(url)
-        data = response.json()
+        data = requests.get(url).json()
         articles = data.get("articles", [])
     except:
         articles = []
@@ -342,166 +340,191 @@ def news():
     return render_template("news.html", articles=articles)
 
 
-# ================= CHAT =================
+# ================= CHAT (OLLAMA AI) =================
 @app.route("/chat", methods=["POST"])
 def chat():
-    user_id = session.get("user_id")
-    if not user_id:
-        return jsonify({"reply": "Login required"})
+    data = request.json
+    msg = data.get("message", "")
+    chat_id = data.get("chat_id")
 
-    msg = request.json.get("message", "")
+    if not msg or not chat_id:
+        return jsonify({"reply": "Invalid request ❌"})
 
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
 
     # Save user message
-    cursor.execute(
-        "INSERT INTO chat_history (user_id, role, message) VALUES (?, ?, ?)",
-        (user_id, "user", msg)
-    )
+    cursor.execute("""
+        INSERT INTO chat_messages (chat_id, role, message)
+        VALUES (?, ?, ?)
+    """, (chat_id, "user", msg))
 
-    # Get chat history (context)
-    cursor.execute(
-        "SELECT role, message FROM chat_history WHERE user_id=? ORDER BY id DESC LIMIT 6",
-        (user_id,)
-    )
+    conn.commit()
 
-    history = cursor.fetchall()[::-1]
-    chat_memory = "\n".join([f"{r}: {m}" for r, m in history])
-
-    prompt = f"""
-You are FinanceGPT.
-
-Rules:
-- Keep replies very short (2–3 lines max)
-- Be fast and direct
-- No unnecessary explanation
-
-{chat_memory}
-
-User: {msg}
-"""
+    reply = "⚠️ AI failed to respond"
 
     try:
+        # 🧠 Clean system instruction (IMPORTANT for llama3)
+        SYSTEM_PROMPT = (
+            "You are FinanceGPT, a helpful personal finance assistant. "
+            "Respond clearly, directly, and only in natural English. "
+            "Do NOT use roles like User:, Assistant:, Me:, or simulate conversations. "
+            "Do NOT generate unrelated text or religious greetings. "
+            "Stay strictly focused on budgeting, expenses, savings, and financial advice."
+        )
+
         res = requests.post(
             OLLAMA_URL,
             json={
-                "model": MODEL_NAME,
-                "prompt": prompt,
+                "model": MODEL_NAME,  # llama3
+                "prompt": SYSTEM_PROMPT + "\n\nUser question: " + msg + "\nAnswer:",
                 "stream": False,
                 "options": {
-                    "num_predict": 60,
-                    "temperature": 0.5
+                    "num_predict": 180,
+                    "temperature": 0.3,
+                    "top_p": 0.9
                 }
             },
-            timeout=30
+            timeout=60
         )
 
-        data = res.json()
+        if res.status_code == 200:
+            reply = res.json().get("response", "").strip()
 
-        # SAFE RESPONSE HANDLING (IMPORTANT)
-        if "response" in data:
-            reply = data["response"]
-        elif "message" in data and isinstance(data["message"], dict):
-            reply = data["message"].get("content", "")
+            if not reply:
+                reply = "⚠️ Empty response from AI"
         else:
-            reply = "⚠️ No response from model"
+            reply = f"Ollama error: {res.status_code}"
 
-        if not reply:
-            reply = "⚠️ Empty response from model"
+    except requests.exceptions.ConnectionError:
+        reply = "❌ Cannot connect to Ollama (run: ollama serve)"
+
+    except requests.exceptions.Timeout:
+        reply = "⏳ AI took too long. Try again."
 
     except Exception as e:
-        reply = f"⚠️ Error: {str(e)}"
+        reply = f"Error: {str(e)}"
 
     # Save assistant reply
-    cursor.execute(
-        "INSERT INTO chat_history (user_id, role, message) VALUES (?, ?, ?)",
-        (user_id, "assistant", reply)
-    )
+    cursor.execute("""
+        INSERT INTO chat_messages (chat_id, role, message)
+        VALUES (?, ?, ?)
+    """, (chat_id, "assistant", reply))
 
     conn.commit()
     conn.close()
 
     return jsonify({"reply": reply})
-@app.route("/ai-insights", methods=["POST"])
-def ai_insights():
-    rows = request.json.get("rows", [])
-    insights = generate_budget_ai(rows)
-    return jsonify({"insights": insights})
+# ================= CHAT HISTORY =================
 @app.route("/get-chat")
 def get_chat():
-    if "user_id" not in session:
-        return jsonify({"history": []})
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT role,message FROM chat_history
+        WHERE user_id=?
+    """, (session.get("user_id"),))
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    return jsonify({"history": rows})
+
+
+# ================= NEW CHAT =================
+@app.route("/new-chat", methods=["POST"])
+def new_chat():
+    user_id = session.get("user_id")
 
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT role, message 
-        FROM chat_history 
-        WHERE user_id=? 
-        ORDER BY id ASC
-    """, (session["user_id"],))
+        INSERT INTO chats (user_id, title)
+        VALUES (?, ?)
+    """, (user_id, "New Chat"))
 
-    rows = cursor.fetchall()
+    chat_id = cursor.lastrowid
+
+    conn.commit()
     conn.close()
 
-    history = [{"role": r, "message": m} for r, m in rows]
+    return jsonify({"chat_id": chat_id})
 
-    return jsonify({"history": history})
 
-@app.route("/ai-autoplan", methods=["POST"])
-def ai_autoplan():
-    rows = request.json.get("rows", [])
-
-    total_income = sum(
-    float(r["actual"]) if r["actual"] not in [None, ""] else 0
-    for r in rows
-    if r["category"] in ["Salary","Freelance","Investments","Business","Gifts","Other"]
-)
-
-    plan = {}
-
-    for r in rows:
-        cat = r["category"]
-
-        if cat in ["Food","Groceries"]:
-            plan[cat] = round(0.2 * total_income / 2, 2)
-
-        elif cat in ["Shopping","Entertainment"]:
-            plan[cat] = round(0.15 * total_income / 2, 2)
-
-        else:
-            plan[cat] = r["budget"]
-
-    return jsonify({"plan": plan})
-@app.route("/load-chat")
-def load_chat():
+# ================= GET CHATS =================
+@app.route("/get-chats")
+def get_chats():
     user_id = session.get("user_id")
-    if not user_id:
-        return jsonify({"history": []})
 
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT id, title FROM chats
+        WHERE user_id=?
+        ORDER BY id DESC
+    """, (user_id,))
+
+    chats = [{"id": r[0], "title": r[1]} for r in cursor.fetchall()]
+
+    conn.close()
+
+    return jsonify({"chats": chats})
+
+
+# ================= LOAD CHAT =================
+@app.route("/load-chat/<int:chat_id>")
+def load_chat_by_id(chat_id):
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
 
     cursor.execute("""
         SELECT role, message
-        FROM chat_history
-        WHERE user_id=?
+        FROM chat_messages
+        WHERE chat_id=?
         ORDER BY id ASC
+    """, (chat_id,))
+
+    history = [{"role": r, "message": m} for r, m in cursor.fetchall()]
+
+    conn.close()
+
+    return jsonify({"history": history})
+@app.route("/ai-fill-budget", methods=["POST"])
+def ai_fill_budget():
+    user_id = session.get("user_id")
+
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT category, actual FROM budget_data
+        WHERE user_id=?
     """, (user_id,))
 
     rows = cursor.fetchall()
     conn.close()
 
-    history = []
-    for role, message in rows:
-        history.append({
-            "role": role,
-            "message": message
-        })
+    total_income = sum(
+        a or 0 for c, a in rows
+        if c in ["Salary","Freelance","Business","Investments"]
+    )
 
-    return jsonify({"history": history})
+    plan = {}
+
+    for c, a in rows:
+        if c in ["Food","Groceries"]:
+            plan[c] = round(total_income * 0.2 / 2, 2)
+        elif c in ["Shopping","Entertainment"]:
+            plan[c] = round(total_income * 0.15 / 2, 2)
+        else:
+            plan[c] = a or 0
+
+    return jsonify(plan)
+
+
 # ================= RUN =================
 if __name__ == "__main__":
     init_db()
